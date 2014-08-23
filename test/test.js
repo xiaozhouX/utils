@@ -17,7 +17,7 @@ define('test', ['utils'], function (_) {
 	// 	value = array.pairs(a);
 	// 	console.log(value);
 
-	var testArrayData = (function(length){
+/*	var testArrayData = (function(length){
 		var i = 0,
 			arrayData = [];
 		for(; i < length; i++){
@@ -44,10 +44,16 @@ define('test', ['utils'], function (_) {
 		}, []);
 	},
 	array = _.Array,
-	results, time;
+	results, time;*/
 
-	time = loop(valueFn, 10);
-	console.log(time);
+	// time = loop(valueFn, 10);
+	// console.log(time);
+
+	var obj = {name:"xxz", age:12},
+		ext = {name:"al", address:"WH"};
+	var result = _.extend(obj, ext);
+	console.log(result);
+	console.log(obj);
 });
 
 var test = require('test');
