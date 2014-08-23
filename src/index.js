@@ -1,8 +1,8 @@
-define('utils', ['utils/Array', 'exports'], function (Array, _) {
-	_.Array = Array;
+define('utils', ['exports', 'utils/Array', 'utils/Lang'], function (_, Array, Lang)  {
+	return Lang.extend(_, Array, Lang);
 });
 
-define('utils/Array', ['utils/lang', 'exports'], function (lang, _) {
+define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 
 	var nativeKeys = Object.keys;
 
@@ -12,13 +12,23 @@ define('utils/Array', ['utils/lang', 'exports'], function (lang, _) {
 		};
 	}
 
+	_.iteratee = function(value, context) {
+		if(value === null) {return _.identity;}
+		if(Lang.isFunction(value)) {return _.createCallback(value, context);}
+		if(Lang.isObject(value)) {return Lang.matches(value);}
+	}
+
+	_.identity = function(value) {
+		return value;
+	}
+
 	// for Object
 	_.keys = function(obj) {
-		if(!lang.isObject(obj)) {return [];}
+		if(!Lang.isObject(obj)) {return [];}
 		if(nativeKeys) {return nativeKeys(obj);}
 		var keys = [], key;
 		for(key in obj) {
-			if(lang.has(keys, key)){
+			if(Lang.has(keys, key)){
 				keys.push(key);
 			}
 		}
@@ -137,45 +147,140 @@ define('utils/Array', ['utils/lang', 'exports'], function (lang, _) {
 	};
 
 	// unfinished
-	_.find = _.detect = function(obj, iterator, context) {
-		var length = obj.length,
-			keys, key;
-		if(length !== +length) {
-			keys = _.keys(obj);
-			length = keys.length;
-		}
-		for(index = 0; index< length; index++) {
-			key = keys ? keys[index] : index;
-			if(iterator(obj[key], key, obj)) return obj[key];
-		}
-		return undefined;
+	_.find = _.detect = function(obj, predicate, context) {
+		var result;
+			_.some(obj, function(value, key, context){
+				if(predicate(value, key, obj)){
+					result = value;
+					return true;
+				}
+			})
+			return result;
 	};
 
-	_.filter = _.select = function(obj, iterator, context) {
-		var length = obj.length,
-			results = [],
-			keys, key;
-		if(length !== +length) {
-			keys = _.keys(obj);
-			length = keys.length;
-		}
-		for(index = 0; index< length; index++) {
-			key = keys ? keys[index] : index;
-			if(iterator(obj[key], key, obj)) {
-				results.push(obj[key]);
-			} 
-		}
-		return results;
+	_.filter = _.select = function(obj, predicate, context) {
+		var results = [];
+			_.each(obj, function(value, key, context){
+				if(predicate(value, key, obj)){
+					results.push(value);
+				}
+			})
+			return result;
 	};
+
+	_.reject = function(obj, predicate, context) {
+		return _.filter(obj, _.negate(_.iterator(predicate), context));
+	};
+
+	_.some = _.any = function(obj, predicate, context) {
+		if(!obj) return false;
+		var length = obj.length,
+			keys = length !== +length && _.keys(obj),
+			length = length || keys.length,
+			index;
+			for(index = 0; index< length; index++) {
+				key = keys ? keys[index] : index;
+				if(predicate(obj[key], key, obj)) {
+					return true;
+				}
+			}
+			return false;
+	};
+
+	_.every = _.all = function(obj, predicate, context) {
+		if(!obj) return false;
+		var length = obj.length,
+			keys = length !== +length && _.keys(obj),
+			length = length || keys.length,
+			index;
+			for(index = 0; index< length; index++) {
+				key = keys ? keys[index] : index;
+				if(!predicate(obj[key], key, obj)) {
+					return false;
+				}
+			}
+			return true;
+	};
+
+	_.where = function(obj, atrr) {
+		return _.filter(obj, Lang.matches(attr));
+	};
+
+	_.findWhere = function(obj, attr) {
+		return _.find(obj, Lang.matches(attr));
+	};
+
+	_.invoke = function(obj, method) {
+		var isMethodFn = Lang.isFunction(method),
+			arg = Array.prototype.slice.call(arguments, 2);
+		return _.map(obj, function(value) {
+			return isMethodFn ? method.apply(value, arg) : value[method].apply(value, arg);
+		});
+	};
+
+	_.pluck = function(obj, propertyName) {
+		propertyName = propertyName || '';
+		return _.reduce(obj, function(mome, value) {
+			if(propertyName in value) {
+				mome.push(value[propertyName]);
+			}
+			return mome;
+		}, []);
+	};
+
 });
 
-define('utils/lang', ['exports'], function (_) {
+define('utils/Lang', ['exports'], function (_) {
 	_.has = function(obj, key) {
 			return hasOwnProperty.call(obj, key);
-	}
+	};
+
+	_.isFunction = function(fn) {
+		var type = Object.prototype.toString.call(fn);
+		return type === '[object Function]' && !!fn;
+	};
 
 	_.isObject = function(obj) {
-		var type = typeof obj;
-		return type === 'object' && !!type;
-	}
+		var type = Object.prototype.toString.call(obj);
+		return type === '[object Object]' && !!obj;
+	};
+
+	_.isArray = function(array) {
+		var type = Object.prototype.toString.call(array);
+		return type === '[object Array]' && !!array;
+	};
+
+	_.extend = function(obj) {
+		var length = arguments.length, index, source, key;
+		if(length < 2) {return obj;}
+		for(index = 1; index < length; index++) {
+			source = arguments[index];
+			for(key in source) {
+				if(_.has(source, key)){
+					obj[key] = source[key];
+				}
+			}
+		}
+		return obj;
+	};
+
+	_.matches = function(attr){
+		var pairs = _.pairs(attr),
+			length = pairs.length;
+		return function(obj) {
+			var index = 0;
+			for(index = 0; index< length; index++){
+				key = pairs[index][0];
+				value = pairs[index][1];
+				if( !obj[key] || obj[key] !== value) { return false; }
+			}
+			return true;
+		};
+	};
+
+	_.negate = function(predicate) {
+		return function(){
+			return !predicate.apply(this, arguments);
+		};
+	};
 });
