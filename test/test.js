@@ -49,10 +49,16 @@ define('test', ['utils'], function (_) {
 	// time = loop(valueFn, 10);
 	// console.log(time);
 
-	var obj = {name:'xxz', age:12},
-		obj2 = {name:'al', address:'WH'};
-	console.log(_.extend(obj, obj2));
-	console.log(obj);
+	// var obj = {name:345, age:12},
+	// 	obj2 = {name:789, address:33};
+	// console.log(_.max(obj));
+	// console.log(_.max(obj, function(value, index){
+	// 	return obj2[index];
+	// }));
+	// console.log(_.max(obj, function(value, index){
+	// 	return this[index];
+	// }, obj2));
+
 });
 
 var test = require('test');

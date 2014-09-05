@@ -1,5 +1,5 @@
-define('utils', ['exports', 'utils/Array', 'utils/Lang'], function (_, Array, Lang)  {
-	return Lang.extend(_, Array, Lang);
+define('utils', ['exports', 'utils/Array', 'utils/Lang', 'utils/Function'], function (_, Array, Lang, Fn)  {
+	return Lang.extend(_, Array, Lang, Fn);
 });
 
 define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
@@ -13,8 +13,8 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 	}
 
 	_.iteratee = function(value, context) {
-		if(value === null) {return _.identity;}
-		if(Lang.isFunction(value)) {return _.createCallback(value, context);}
+		if(!value) {return _.identity;}
+		if(Lang.isFunction(value)) {return createCallback(value, context);}
 		if(Lang.isObject(value)) {return Lang.matches(value);}
 	}
 
@@ -39,9 +39,9 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 		var keys = _.keys(obj),
 			length = keys.length,
 			values = [],
-			i = 0;
-		for(; i < length; i++) {
-			values[i] = obj[keys[i]];
+			index;
+		for(index = 0; index < length; index++) {
+			values[index] = obj[keys[index]];
 		}
 		return values;
 	};
@@ -50,12 +50,20 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 		var keys = _.keys(obj),
 			length = keys.length,
 			pairs = [],
-			i, pair;
-		for(i = 0; i< length; i++) {
-			pair = keys[i];
-			pairs[i] = [pair, obj[pair]];
+			index, pair;
+		for(index = 0; index< length; index++) {
+			pair = keys[index];
+			pairs[index] = [pair, obj[pair]];
 		}
 		return pairs;
+	};
+
+	_.invert = function(obj) {
+		var results = [];
+		_.forEach(obj, function(value, key) {
+			results[value] = key;
+		});
+		return results;
 	};
 
 	//for Array
@@ -109,25 +117,6 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 		return memo;
 	};
 
-/*	  _.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
-    var initial = arguments.length > 2;
-    if (obj == null) obj = [];
-    // if (nativeReduce && obj.reduce === nativeReduce) {
-    //   if (context) iterator = _.bind(iterator, context);
-    //   return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
-    // }
-    _.each(obj, function(value, index, list) {
-      if (!initial) {
-        memo = value;
-        initial = true;
-      } else {
-        memo = iterator.call(context, memo, value, index, list);
-      }
-    });
-    if (!initial) throw new TypeError(reduceError);
-    return memo;
-  };
-*/
 	_.reduceRight = _.foldr = function(obj, iterator, memo, context) {
 		var index = obj.length,
 			iterator =  createCallback(iterator, context),
@@ -228,26 +217,76 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 		}, []);
 	};
 
+	_.max = function(obj, iteratee, context) {
+		var result = -Infinity, temp;
+		iteratee = _.iteratee(iteratee, context);
+		return _.reduce(obj, function(mome, value, index, obj) {
+			temp = iteratee(value, index, obj);
+			return mome > temp ? mome : temp;
+		}, result);
+	};
+
+	_.min = function(obj, iteratee, context) {
+		var result = +Infinity, temp;
+		iteratee = _.iteratee(iteratee, context);
+		return _.reduce(obj, function(mome, value, index, obj) {
+			temp = iteratee(value, index, obj, context);
+			return mome < temp ? mome : temp;
+		}, result);
+	};
+
+	_.sortBy = function(obj, iteratee, context) {
+		var result = +Infinity, temp;
+		iteratee = _.iteratee(iteratee, context);
+		return _.reduce(obj, function(mome, value, index, obj) {
+			temp = iteratee(value, index, obj, context);
+			return mome < temp ? mome : temp;
+		}, result);
+	};
 });
+
+define('utils/Function', ['exports'], function (_) {
+
+	function ftl(array) {
+			var length = array.length,
+			first = array[0];
+			args = new Array(length);
+			for(index = 0; index< length - 1; index++) {
+				args[index] = array[index+1];
+			}
+			args[index] = first;
+			return args;
+	}
+
+	_.revertFn = function(fn) {
+		return function() {
+			if(arguments.length < 2) {return fn;}
+			var args = ftl(arguments);
+			return fn.apply(this, args);
+		};
+	};
+});
+
 
 define('utils/Lang', ['exports'], function (_) {
 	_.has = function(obj, key) {
 			return hasOwnProperty.call(obj, key);
 	};
 
+	function _toString(obj) {
+		return Object.prototype.toString.call(obj);
+	}
+
 	_.isFunction = function(fn) {
-		var type = Object.prototype.toString.call(fn);
-		return type === '[object Function]' && !!fn;
+		return !!fn && _toString(fn) === '[object Function]';
 	};
 
 	_.isObject = function(obj) {
-		var type = Object.prototype.toString.call(obj);
-		return type === '[object Object]' && !!obj;
+		return !!obj && _toString(obj) === '[object Object]';
 	};
 
 	_.isArray = function(array) {
-		var type = Object.prototype.toString.call(array);
-		return type === '[object Array]' && !!array;
+		return !!array && _toString(array) === '[object Array]';
 	};
 
 	_.extend = function(obj) {
