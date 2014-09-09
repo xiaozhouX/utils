@@ -1,20 +1,24 @@
 define('test', ['utils'], function (_) {
 	// var a = [1,2,3,4],
-	// 	array = _.Array,
-	// 	map = array.map(a, function(value) {
-	// 		return value * 3;
+	// 	test2 = {name:'allen', age:22},
+	// 	b = [],
+	// 	map = _.map(test2, function(value) {
+	// 		return value + '2';
 	// 	}),
-	// 	each = array.each(a, function(value) {
+	// 	each = _.each(a, function(value, key) {
+	// 		b[key] = value *3;
 	// 		return value *3;
-	// 	}),
-	// 	reduce = array.reduce(a, function(memo, value) {
+	// 	});
+		// console.log(b);
+		// console.log(map);
+	// 	reduce = _.reduce(a, function(memo, value) {
 	// 		memo.push(value*5);
 	// 		return memo;
 	// 	}, []),
-	// 	reduce1 = array.reduce(a, function(memo, value) {
+	// 	reduce1 = _.reduce(a, function(memo, value) {
 	// 		return value + memo;
 	// 	}),
-	// 	value = array.pairs(a);
+	// 	value = _.pairs(a);
 	// 	console.log(value);
 
 	// var testArrayData = (function(length){
@@ -38,12 +42,11 @@ define('test', ['utils'], function (_) {
 	// 	return time / times;
 	// },
 	// valueFn = function() {
-	// 	results = array.reduce(testArrayData, function(memo, value) {
+	// 	results = _.reduce(testArrayData, function(memo, value) {
 	// 		memo.push(value*5);
 	// 		return memo;
 	// 	}, []);
 	// },
-	// array = _.Array,
 	// results, time;
 
 	// time = loop(valueFn, 10);
@@ -59,6 +62,10 @@ define('test', ['utils'], function (_) {
 	// 	return this[index];
 	// }, obj2));
 
+	// console.log(_.values({nanme:'allen', age:22}));
+	// console.log(_.values([2,3,4,5,6]));
+	// var odds = _.reject([1, 2, 3, 4, 5, 6], function(num){ return num % 2 == 0; });
+	// console.log(odds);
 });
 
 var test = require('test');

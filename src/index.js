@@ -6,15 +6,64 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 
 	var nativeKeys = Object.keys;
 
-	function createCallback(fn, context) {
+	function _createCallback(fn, context) {
 		return function() {
 			return fn.apply(context, arguments);
 		};
 	}
 
+	function _arrEach(array, iteratee) {
+		var length = array.length,
+				index;
+		for(index = 0; index < length; index++) {
+			if(iteratee(array[index], index, array, index)){
+				break;
+			}
+		}
+	}
+
+	function _objEach(obj, iteratee) {
+		var index = 0, key;
+		for(key in obj) {
+			if(Lang.has(obj, key)){
+				if(iteratee(obj[key], key, obj, index)){
+					break;
+				}
+				index ++;
+			}
+		}
+	}
+
+	function _loopEach(obj, iteratee, context) {
+		iteratee = _createCallback(iteratee, context);
+		if(Lang.isObject(obj)) {
+			return _objEach(obj, iteratee);
+		}else if(Lang.isArray(obj)) {
+			return _arrEach(obj, iteratee);
+		}
+		return obj;
+	}
+
+	function _getElement(obj, id) {
+		var tempElem = null;
+		_loopEach(obj, function(value, key, obj, index){
+			if(index == id) {
+				tempElem = value;
+				return true;		//break the loop
+			}
+			console.log(index);
+		});
+		return tempElem;
+	}
+
+	function _makeEqualLengthArray(obj) {
+		var length = _.keys(obj).length;
+		return new Array(length);
+	}
+
 	_.iteratee = function(value, context) {
 		if(!value) {return _.identity;}
-		if(Lang.isFunction(value)) {return createCallback(value, context);}
+		if(Lang.isFunction(value)) {return _createCallback(value, context);}
 		if(Lang.isObject(value)) {return Lang.matches(value);}
 	}
 
@@ -24,102 +73,58 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 
 	// for Object
 	_.keys = function(obj) {
-		if(!Lang.isObject(obj)) {return [];}
+		if(!Lang.isObject(obj) && !Lang.isArray(obj)) {return [];}
 		if(nativeKeys) {return nativeKeys(obj);}
-		var keys = [], key;
-		for(key in obj) {
-			if(Lang.has(keys, key)){
-				keys.push(key);
-			}
-		}
-		return keys;
+		return _.map(obj, function(value, key){
+			return key;
+		});
 	};
 
 	_.values = function(obj) {
-		var keys = _.keys(obj),
-			length = keys.length,
-			values = [],
-			index;
-		for(index = 0; index < length; index++) {
-			values[index] = obj[keys[index]];
-		}
-		return values;
+		return _.map(obj, function(value){
+			return value;
+		});
 	};
 
 	_.pairs = function(obj) {
-		var keys = _.keys(obj),
-			length = keys.length,
-			pairs = [],
-			index, pair;
-		for(index = 0; index< length; index++) {
-			pair = keys[index];
-			pairs[index] = [pair, obj[pair]];
-		}
-		return pairs;
+		return _.map(obj, function(value, key){
+			return [key, value];
+		});
 	};
 
 	_.invert = function(obj) {
 		var results = [];
-		_.forEach(obj, function(value, key) {
+		_loopEach(obj, function(value, key) {
 			results[value] = key;
 		});
 		return results;
 	};
 
 	//for Array
-	_.each = _.forEach = function(obj, iterator, context) {
-		var length = obj.length,
-			iterator = createCallback(iterator, context),
-			index, keys, key;
-		if(length !== +length) {
-			keys = _.keys(obj);
-			length = keys.length;
-		}
-		for(index = 0; index< length; index++) {
-			key = keys ? keys[index] : index;
-			iterator(obj[key], key, obj);
-		}
-		return obj;
-	};
+	_.each = _.forEach = _loopEach;
 
-	_.map = _.collect = function(obj, iterator, context) {
-		var length = obj.length,
-			iterator = createCallback(iterator, context),
-			results, keys, key, index;
-		if(length !== +length) {
-			keys = _.keys(obj);
-			length = keys.length;
-		}
-		results = new Array(length);
-		for(index = 0; index< length; index++) {
-			key = keys ? keys[index] : index;
-			results[index] = iterator(obj[key], key, obj);
-		}
+	_.map = _.collect = function(obj, iteratee, context) {
+		var results = _makeEqualLengthArray(obj),
+				index = 0;
+		_loopEach(obj, function(value, key, obj, index){
+			results[index] = iteratee(value, key, obj);
+		});
 		return results;
 	};
 
-	_.reduce = function(obj, iterator, memo, context) {
-		var length = obj.length,
-			iterator =  createCallback(iterator, context),
-			index = 0,
-			keys;
-		if(length !== +length) {
-			keys = _.keys(obj);
-			length = keys.length;
-		}
-		if(!memo) {
-			memo = obj[keys ? keys[index++] : index++];
-		}
-		for(;index< length; index++) {
-			key = keys ? keys[index] : index;
-			memo = iterator(memo, obj[key], key, obj) || memo;
-		}
+	_.reduce = function(obj, iteratee, memo, context) {
+		iteratee =  _createCallback(iteratee, context);
+		memo = !mome ? _getElement(obj, 0) : mome;
+
+		_loopEach(obj, function(value, key, obj){
+			mome = iteratee(memo, value, key, obj);
+		});
 		return memo;
 	};
 
-	_.reduceRight = _.foldr = function(obj, iterator, memo, context) {
+	_.reduceRight = _.foldr = function(obj, iteratee, memo, context) {
 		var index = obj.length,
-			iterator =  createCallback(iterator, context),
+			iteratee =  _createCallback(iteratee, context),
 			keys;
 		if(index !== +index) {
 			keys = _.keys(obj);
@@ -130,65 +135,63 @@ define('utils/Array', ['utils/Lang', 'exports'], function (Lang, _) {
 		}
 		while(index--) {
 			key = keys ? keys[index] : index;
-			memo = iterator(memo, obj[key], key, obj) || memo;
+			memo = iteratee(memo, obj[key], key, obj) || memo;
 		}
 		return memo;
 	};
 
 	// unfinished
 	_.find = _.detect = function(obj, predicate, context) {
-		var result;
-			_.some(obj, function(value, key, context){
+		var result = null;
+		predicate = _.iteratee(predicate, context)
+			_.some(obj, function(value, key, obj){
 				if(predicate(value, key, obj)){
 					result = value;
 					return true;
 				}
-			})
+			});
 			return result;
 	};
 
 	_.filter = _.select = function(obj, predicate, context) {
+		predicate = _.iteratee(predicate, context);
 		var results = [];
-			_.each(obj, function(value, key, context){
-				if(predicate(value, key, obj)){
-					results.push(value);
-				}
-			})
-			return result;
+		_loopEach(obj, function(value, key){
+			if(predicate(value, key, obj)){
+				results.push(value);
+			}
+		});
+		return results;
 	};
 
 	_.reject = function(obj, predicate, context) {
-		return _.filter(obj, _.negate(_.iterator(predicate), context));
+		return _.filter(obj, Lang.negate(_.iteratee(predicate, context)));
 	};
 
 	_.some = _.any = function(obj, predicate, context) {
 		if(!obj) return false;
-		var length = obj.length,
-			keys = length !== +length && _.keys(obj),
-			length = length || keys.length,
-			index;
-			for(index = 0; index< length; index++) {
-				key = keys ? keys[index] : index;
-				if(predicate(obj[key], key, obj)) {
-					return true;
-				}
+		predicate = _.iteratee(predicate, context);
+		var value = false;
+		_loopEach(obj, function(value, key){
+			if(predicate(value, key, obj)) {
+				value = true;
+				return true;		//break the loop
 			}
-			return false;
+		});
+		return value;
 	};
 
 	_.every = _.all = function(obj, predicate, context) {
 		if(!obj) return false;
-		var length = obj.length,
-			keys = length !== +length && _.keys(obj),
-			length = length || keys.length,
-			index;
-			for(index = 0; index< length; index++) {
-				key = keys ? keys[index] : index;
-				if(!predicate(obj[key], key, obj)) {
-					return false;
-				}
+		predicate = _.iteratee(predicate, context);
+		var value = true;
+		_loopEach(obj, function(value, key){
+			if(!predicate(value, key, obj)) {
+				value = false;
+				return true;		//break the loop
 			}
-			return true;
+		});
+		return value;
 	};
 
 	_.where = function(obj, atrr) {
@@ -270,7 +273,7 @@ define('utils/Function', ['exports'], function (_) {
 
 define('utils/Lang', ['exports'], function (_) {
 	_.has = function(obj, key) {
-			return hasOwnProperty.call(obj, key);
+			return obj != null && hasOwnProperty.call(obj, key);
 	};
 
 	function _toString(obj) {
