@@ -1,4 +1,4 @@
-define('test', ['utils'], function(_) {
+define('test', ['utils', 'event/delegate'], function(_, Delegate) {
   // var a = [1,2,3,4],
   // 	test2 = {name:'allen', age:22},
   // 	b = [],
@@ -68,5 +68,9 @@ define('test', ['utils'], function(_) {
   // add5 = _.partial(add, 5, 20);
   // console.log(add5(10, 5));
   // console.log(_.slice([1,2,3,4,5], 2));
+  var root = new Delegate('#root');
+  root.on('click', 'li', function(e){
+    console.log(e);
+  });
 });
 var test = require('test');

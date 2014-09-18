@@ -358,3 +358,86 @@ define('utils/Lang', ['exports'], function(_) {
     };
   };
 });
+
+
+define('event/delegate', [], function() {
+  //unfinished
+  // TODO: add off function,
+  //       stop bubble when preventDefault is called
+  //       change match function logic
+  function Delegate(rootSelector){
+    this.rootElem = document.querySelector(rootSelector) || document;
+    this.listenerMap = [{},{}];
+    this.handle = Delegate.prototype.handle.bind(this);
+  }
+  Delegate.prototype.on = function(eventType, childSelector, handler, useCapture){
+    var captureType = useCapture ? 0 : 1,
+        listenerList = this.listenerMap[captureType],
+        root = this.rootElem;
+    if(!root){return ;}
+    if(!listenerList[eventType]){
+      listenerList[eventType] = [];
+      root.addEventListener(eventType, this.handle, useCapture);
+    }
+    listenerList[eventType].push({
+      selector: childSelector,
+      matche: matcheFn,
+      handler: handler
+    });
+  };
+  Delegate.prototype.handle = function(event){
+    var target = event.target,
+        eventType = event.type,
+        phase = event.eventPhase,
+        listenerList = [],
+        listener,
+        length;
+    switch (phase) {
+      case 1:
+        listenerList = this.listenerMap[0][eventType];
+      break;
+      case 2:
+        if(this.listenerMap[0] && this.listenerMap[0][eventType]){
+          listenerList = listenerList.concat(this.listenerMap[0]);
+        }
+        if(this.listenerMap[1] && this.listenerMap[1][eventType]){
+          listenerList = listenerList.concat(this.listenerMap[1]);
+        }
+      break;
+      case 3:
+        listenerList = this.listenerMap[1][eventType];
+      break;
+    }
+    length = listenerList.length;
+    while(target){
+      for(i = 0; i< length; i++){
+        listener = listenerList[i];
+        if(!listener) break;
+        if(listener.matche.call(target, listener.selector, target)){
+          returned = this.fireHandlerEvent(event, target, listener);
+        }
+        if (returned === false) {
+          event.preventDefault();
+          return;
+        }
+      }
+      target = target.parentElement;
+    }
+  };
+  Delegate.prototype.fireHandlerEvent = function(event, target, listener){
+    return listener.handler.call(target, event, target);
+  }
+
+  function matcheFn(selector, elem){
+    var queryResults = document.querySelectorAll(selector),
+    length = queryResults.length,
+    i;
+    for(i = 0; i< length; i++){
+      if(queryResults[i] == elem){
+        return true;
+      }
+    }
+    return false;
+  }
+  return Delegate;
+});
