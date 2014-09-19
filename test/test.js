@@ -68,9 +68,29 @@ define('test', ['utils', 'event/delegate'], function(_, Delegate) {
   // add5 = _.partial(add, 5, 20);
   // console.log(add5(10, 5));
   // console.log(_.slice([1,2,3,4,5], 2));
-  var root = new Delegate('#root');
+  var rootElem = document.getElementById('root');
+  var root = new Delegate(rootElem);
   root.on('click', 'li', function(e){
+    console.log('li');
+    console.log(e.currentTarget);
+    // e.stopPropagation();
+    // e.preventDefault();
+    // e.stopImmediatePropagation();
+    return false;
+  });
+  root.on('click', 'li', function(e){
+    console.log('li22');
     console.log(e);
   });
+  root.on('click', '#root', function(e){
+    console.log('root');
+    console.log(e.currentTarget);
+    console.log(e);
+  });
+  // var test = new Delegate('#test');
+  // test.on('keydown', '#test', function(e){
+  //   // return false;
+  //   // e.preventDefault();
+  // })
 });
 var test = require('test');

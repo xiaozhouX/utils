@@ -358,82 +358,101 @@ define('utils/Lang', ['exports'], function(_) {
     };
   };
 });
-
-
-define('event/delegate', [], function() {
-  //unfinished
+define('event/delegate', ['event/unifyEvent'], function(UnifyEvent) {
   // TODO: add off function,
-  //       stop bubble when preventDefault is called
   //       change match function logic
-  function Delegate(rootSelector){
-    this.rootElem = document.querySelector(rootSelector) || document;
-    this.listenerMap = [{},{}];
+  var CAPTURE_TYPE = ['focus', 'blur', 'load', 'error'];
+  function Delegate(rootElem) {
+    this.rootElem = rootElem || document;
+    this.listenerMap = {};
     this.handle = Delegate.prototype.handle.bind(this);
   }
-  Delegate.prototype.on = function(eventType, childSelector, handler, useCapture){
-    var captureType = useCapture ? 0 : 1,
-        listenerList = this.listenerMap[captureType],
-        root = this.rootElem;
-    if(!root){return ;}
-    if(!listenerList[eventType]){
+  Delegate.prototype.on = function(eventType, childSelector, handler) {
+    var listenerList = this.listenerMap,
+        root = this.rootElem,
+        isCapture;
+    if (!root) {
+      return;
+    }
+    if (!listenerList[eventType]) {
+      isCapture = CAPTURE_TYPE.indexOf(eventType) !== -1; //判断该事件的监听方式 捕获或者冒泡
       listenerList[eventType] = [];
-      root.addEventListener(eventType, this.handle, useCapture);
+      root.addEventListener(eventType, this.handle, isCapture);
     }
     listenerList[eventType].push({
       selector: childSelector,
       matche: matcheFn,
       handler: handler
     });
+    return this;
   };
-  Delegate.prototype.handle = function(event){
-    var target = event.target,
-        eventType = event.type,
-        phase = event.eventPhase,
-        listenerList = [],
-        listener,
-        length;
-    switch (phase) {
-      case 1:
-        listenerList = this.listenerMap[0][eventType];
-      break;
-      case 2:
-        if(this.listenerMap[0] && this.listenerMap[0][eventType]){
-          listenerList = listenerList.concat(this.listenerMap[0]);
-        }
-        if(this.listenerMap[1] && this.listenerMap[1][eventType]){
-          listenerList = listenerList.concat(this.listenerMap[1]);
-        }
-      break;
-      case 3:
-        listenerList = this.listenerMap[1][eventType];
-      break;
-    }
-    length = listenerList.length;
-    while(target){
-      for(i = 0; i< length; i++){
-        listener = listenerList[i];
-        if(!listener) break;
-        if(listener.matche.call(target, listener.selector, target)){
-          returned = this.fireHandlerEvent(event, target, listener);
-        }
-        if (returned === false) {
-          event.preventDefault();
-          return;
+  Delegate.prototype.off = function(eventType, childSelector, handler) {
+    var listenerList = this.listenerMap,
+        isCapture = CAPTURE_TYPE.indexOf(eventType) !== -1, //判断该事件的监听方式 捕获或者冒泡
+        root = this.rootElem,
+        i, eventListenerList, listener;
+    if(!eventType){
+      for(eachEventType in listenerList){
+        if(listenerList.hasOwnProperty(eachEventType)){
+          this.off(eachEventType, childSelector, handler);
         }
       }
+      return this;
+    }
+    childSelector = !childSelector ? '*' : childSelector;
+    eventListenerList = listenerList[eventType];
+    for(i = eventListenerList.length; i > 0; i--) {
+      listener = eventListenerList[i];
+      if(listener.matche.call(target, listener.selector, target)){
+        listener.splice(i, 1);
+      }
+    }
+  };
+  Delegate.prototype.handle = function(event) {
+    var target = event.target,
+      eventType = event.type,
+      rootElem = this.rootElem,
+      eventListenerList = this.listenerMap[eventType],
+      length = eventListenerList.length,
+      unifyEvent = new UnifyEvent(event),
+      returned, listener, i;
+    while (target) {
+      unifyEvent.reset(target);
+      for (i = 0; i < length; i++) {
+        listener = eventListenerList[i];
+        if (!listener) break;
+        if (listener.matche.call(target, listener.selector, target)) {
+          returned = this.fireHandlerEvent(unifyEvent, target, listener);
+        }
+        if (returned.fnReturned === false) {
+          unifyEvent.preventDefault();
+        }
+        if (returned.stopImmediate === true) {
+          break;
+        } //if stopImmediatePropagation is called
+      }
+      if (target === rootElem || returned.stopPropagate === true) {
+        break;
+      } //if stopPropagation is called
+      length = eventListenerList.length;
       target = target.parentElement;
     }
   };
-  Delegate.prototype.fireHandlerEvent = function(event, target, listener){
-    return listener.handler.call(target, event, target);
+  Delegate.prototype.fireHandlerEvent = function(event, target, listener) {
+    return {
+      fnReturned: listener.handler.call(target, event, target),
+      stopImmediate: event.stopImmediate,
+      stopPropagate: event.stopPropagate
+    };
   }
 
-  function matcheFn(selector, elem){
+  function matcheFn(selector, elem) {
+    if(selector === '*') return true;
     var queryResults = document.querySelectorAll(selector),
-    length = queryResults.length,
-    i;
-    for(i = 0; i< length; i++){
-      if(queryResults[i] == elem){
+      length = queryResults.length,
+      i;
+    for (i = 0; i < length; i++) {
+      if (queryResults[i] == elem) {
         return true;
       }
     }
@@ -441,3 +460,29 @@ define('event/delegate', [], function() {
   }
   return Delegate;
 });
+
+define('event/unifyEvent', [], function(){
+  function UnifyEvent(event) {
+    this.originEvent = event;
+    this.hasCreated = true;
+    this.target = event.target;
+    this.stopImmediate = false;
+    this.stopPropagate = false;
+  }
+  UnifyEvent.prototype.reset = function(target){
+    this.currentTarget = target;
+    this.stopImmediate = false;
+    this.stopPropagate = false;
+  };
+  UnifyEvent.prototype.preventDefault = function() {
+    this.originEvent.preventDefault();
+  };
+  UnifyEvent.prototype.stopImmediatePropagation = function() {
+    this.stopImmediate = true;
+    this.stopPropagate = true;
+  };
+  UnifyEvent.prototype.stopPropagation = function() {
+    this.stopPropagate = true;
+  };
+  return UnifyEvent;
+})
