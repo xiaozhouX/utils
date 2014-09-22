@@ -70,27 +70,30 @@ define('test', ['utils', 'event/delegate'], function(_, Delegate) {
   // console.log(_.slice([1,2,3,4,5], 2));
   var rootElem = document.getElementById('root');
   var root = new Delegate(rootElem);
-  root.on('click', 'li', function(e){
-    console.log('li');
-    console.log(e.currentTarget);
+  function fn1(e){
+    console.log('li11');
     // e.stopPropagation();
-    // e.preventDefault();
     // e.stopImmediatePropagation();
-    return false;
-  });
-  root.on('click', 'li', function(e){
+  }
+  function fn2(e){
     console.log('li22');
-    console.log(e);
-  });
-  root.on('click', '#root', function(e){
+  }
+  function fn3(e){
+    console.log('click!');
+  }
+  function fnRoot(e){
     console.log('root');
-    console.log(e.currentTarget);
-    console.log(e);
-  });
-  // var test = new Delegate('#test');
-  // test.on('keydown', '#test', function(e){
-  //   // return false;
-  //   // e.preventDefault();
-  // })
+  }
+  root.on('click', 'li', fn1);
+  root.on('click', 'li', fn2);
+  root.on('click', '.click', fn3);
+  root.on('click', '.l', fnRoot);
+  root.off('click', '.click');
+  var inputElem = document.getElementById('test');
+  var testInput = new Delegate(inputElem);
+  testInput.on('keydown', '#test', function(e){
+    e.preventDefault();
+    // return false;
+  })
 });
 var test = require('test');
