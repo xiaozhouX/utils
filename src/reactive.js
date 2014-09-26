@@ -71,7 +71,8 @@ var reactiveExtensions = {
   _isReactive: true,
   run: function(){
     var args = Array.prototype.slice.call(arguments);
-    return this.memo = this.fn.apply(this.context, this.argumentList(args));
+    var a = this.argumentList(args);
+    return this.memo = this.fn.apply(this.context, a);
   },
   get: function(){
     return this.memo === $R.empty ? this.run() : this.memo;
@@ -88,7 +89,7 @@ var reactiveExtensions = {
     this.dependencies = newDependencies = newDependencies.filter(function(dep){
       return dep !== this;
     }, this);
-    newDependencies.map(function(dep){
+    newDependencies.forEach(function(dep){
         if(dep !== $R._){
           dep.addDependent(this);
         }

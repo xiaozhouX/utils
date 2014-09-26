@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <script src="../src/reactive.js"></script>
+  <script>
+    window.onload = function () {
+      var now = $R(function (date) { return date }),
+          time = document.getElementById('time'),
+          timeDivContents = $R(function (now) {
+            time.innerHTML = now.toString();
+          }).bindTo(now);
+
+      setInterval(function () { now(new Date) }, 1);
+    }
+  </script>
+</head>
+<body>
+  <div id="time"></div>
+</body>
+</html>
