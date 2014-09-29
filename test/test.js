@@ -1,4 +1,4 @@
-define('test', ['utils', 'event/delegate'], function(_, Delegate) {
+define('test', ['utils', 'event/delegate', 'tick'], function(_, Delegate, tick) {
   // var a = [1,2,3,4],
   // 	test2 = {name:'allen', age:22},
   // 	b = [],
@@ -68,32 +68,47 @@ define('test', ['utils', 'event/delegate'], function(_, Delegate) {
   // add5 = _.partial(add, 5, 20);
   // console.log(add5(10, 5));
   // console.log(_.slice([1,2,3,4,5], 2));
-  var rootElem = document.getElementById('root');
-  var root = new Delegate(rootElem);
-  function fn1(e){
-    console.log('li11');
-    // e.stopPropagation();
-    // e.stopImmediatePropagation();
-  }
-  function fn2(e){
-    console.log('li22');
-  }
-  function fn3(e){
-    console.log('click!');
-  }
-  function fnRoot(e){
-    console.log('root');
-  }
-  root.on('click', 'li', fn1);
-  root.on('click', 'li', fn2);
-  root.on('click', '.click', fn3);
-  root.on('click', '.l', fnRoot);
-  root.off('click', '.click');
-  var inputElem = document.getElementById('test');
-  var testInput = new Delegate(inputElem);
-  testInput.on('keydown', '#test', function(e){
-    e.preventDefault();
-    // return false;
-  })
+
+  //delegate
+  // var rootElem = document.getElementById('root');
+  // var root = new Delegate(rootElem);
+  // function fn1(e){
+  //   console.log('li11');
+  //   // e.stopPropagation();
+  //   // e.stopImmediatePropagation();
+  // }
+  // function fn2(e){
+  //   console.log('li22');
+  // }
+  // function fn3(e){
+  //   console.log('click!');
+  // }
+  // function fnRoot(e){
+  //   console.log('root');
+  // }
+  // root.on('click', 'li', fn1);
+  // root.on('click', 'li', fn2);
+  // root.on('click', '.click', fn3);
+  // root.on('click', '.l', fnRoot);
+  // root.off('click', '.click');
+  // var inputElem = document.getElementById('test');
+  // var testInput = new Delegate(inputElem);
+  // testInput.on('keydown', '#test', function(e){
+  //   e.preventDefault();
+  //   // return false;
+  // });
+
+  // var fn = _.variadic(function(a,b,args){
+  //   console.log(a);
+  //   console.log(b);
+  //   console.log(args);
+  // });
+  // fn(1,2,3,4,5,6);
+
+  // var startTime = Date.now();
+  // tick.setCorrectInterval(function() {
+  //   console.log((Date.now() - startTime) + 'ms elapsed');
+  // }, 1000);
+
 });
 var test = require('test');

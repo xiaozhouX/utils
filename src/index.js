@@ -67,10 +67,11 @@ define('utils/Array', ['utils/Lang', 'exports'], function(Lang, _) {
   }
 
   function _getNativeFnFormatToUtils(fn) {
-    return function(obj) {
-      var args = slice.call(arguments, 1);
-      return fn.apply(obj, args);
-    };
+    return fn;
+    // return function(obj) {
+    //   var args = slice.call(arguments, 1);
+    //   return fn.apply(obj, args);
+    // };
   }
   _.iteratee = function(value, context) {
     if (!value) {
@@ -302,6 +303,15 @@ define('utils/Function', ['exports', 'utils/Array'], function(_, Arr) {
       Arr.push.apply(args, Arr.slice.call(arguments, position));
       return fn.apply(this, args);
     }
+  };
+  _.variadic = function(fn) {
+    var count = ( fn.length -1 > 0) ? fn.length - 1 : 0;
+    return function(){
+      var args = Arr.slice.call(arguments, 0, count);
+      args.length = count;
+      args.push(Arr.slice.call(arguments, count));
+      return fn.apply(this, args);
+    };
   };
 });
 define('utils/Lang', ['exports'], function(_) {
