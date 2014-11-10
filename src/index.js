@@ -155,48 +155,48 @@ define('utils/Array', ['utils/Lang', 'exports'], function(Lang, _) {
   //   return memo;
   // };
   // unfinished
-  _.find = _.detect = function(obj, predicate, context) {
+  _.find = _.detect = function(obj, predicator, context) {
     var result = null;
-    predicate = _.iteratee(predicate, context)
+    predicator = _.iteratee(predicator, context)
     _.some(obj, function(value, key, obj) {
-      if (predicate(value, key, obj)) {
+      if (predicator(value, key, obj)) {
         result = value;
         return true;
       }
     });
     return result;
   };
-  _.filter = _.select = function(obj, predicate, context) {
-    predicate = _.iteratee(predicate, context);
+  _.filter = _.select = function(obj, predicator, context) {
+    predicator = _.iteratee(predicator, context);
     var results = [];
     _loopEach(obj, function(value, key) {
-      if (predicate(value, key, obj)) {
+      if (predicator(value, key, obj)) {
         results.push(value);
       }
     });
     return results;
   };
-  _.reject = function(obj, predicate, context) {
-    return _.filter(obj, Lang.negate(_.iteratee(predicate, context)));
+  _.reject = function(obj, predicator, context) {
+    return _.filter(obj, Lang.negate(_.iteratee(predicator, context)));
   };
-  _.some = _.any = function(obj, predicate, context) {
+  _.some = _.any = function(obj, predicator, context) {
     if (!obj) return false;
-    predicate = _.iteratee(predicate, context);
+    predicator = _.iteratee(predicator, context);
     var value = false;
     _loopEach(obj, function(value, key) {
-      if (predicate(value, key, obj)) {
+      if (predicator(value, key, obj)) {
         value = true;
         return true; //break the loop
       }
     });
     return value;
   };
-  _.every = _.all = function(obj, predicate, context) {
+  _.every = _.all = function(obj, predicator, context) {
     if (!obj) return false;
-    predicate = _.iteratee(predicate, context);
+    predicator = _.iteratee(predicator, context);
     var value = true;
     _loopEach(obj, function(value, key) {
-      if (!predicate(value, key, obj)) {
+      if (!predicator(value, key, obj)) {
         value = false;
         return true; //break the loop
       }
@@ -307,11 +307,32 @@ define('utils/Function', ['exports', 'utils/Array'], function(_, Arr) {
   _.variadic = function(fn) {
     var count = ( fn.length -1 > 0) ? fn.length - 1 : 0;
     return function(){
+      // var args = new Array(count);
+      // Arr.forEach(args, function(value, index){
+      //   args[index] = value;
+      // });
       var args = Arr.slice.call(arguments, 0, count);
       args.length = count;
       args.push(Arr.slice.call(arguments, count));
       return fn.apply(this, args);
     };
+  };
+  _.debounce = function(fn, wait, context){
+    var pending = false;
+    return function(){
+      if(!pending){
+        fn.apply(context, arguments);
+        pending = true;
+        setTimeout(function(){
+          pending = false;
+        }, wait);
+      }
+    };
+  };
+  _.when = function(condition, fuc){
+    if(condition()){
+      return fuc();
+    }
   };
 });
 define('utils/Lang', ['exports'], function(_) {
@@ -362,9 +383,9 @@ define('utils/Lang', ['exports'], function(_) {
       return true;
     };
   };
-  _.negate = function(predicate) {
+  _.negate = function(predicator) {
     return function() {
-      return !predicate.apply(this, arguments);
+      return !predicator.apply(this, arguments);
     };
   };
 });

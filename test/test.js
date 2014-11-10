@@ -1,4 +1,16 @@
 define('test', ['utils', 'event/delegate', 'tick'], function(_, Delegate, tick) {
+  var makeTestFn = function(fn, runTimes){
+    return function(){
+      var arg = _.slice.call(arguments),
+          i;
+      for(i = 0; i < runTimes; i++){
+        fn.apply(arg);
+      }
+    };
+  },
+      getDate = function(){
+        return new Date();
+      };
   // var a = [1,2,3,4],
   // 	test2 = {name:'allen', age:22},
   // 	b = [],
@@ -98,13 +110,17 @@ define('test', ['utils', 'event/delegate', 'tick'], function(_, Delegate, tick) 
   //   // return false;
   // });
 
-  // var fn = _.variadic(function(a,b,args){
-  //   console.log(a);
-  //   console.log(b);
-  //   console.log(args);
-  // });
+  var fn = _.variadic(function(a,b,args){
+  }),
+    testFn = makeTestFn(fn, 100000),
+    startTime = getDate(), endTime;
+  testFn(1,2);
+  endTime = getDate();
+  console.log(endTime - startTime);
   // fn(1,2,3,4,5,6);
-
+  // fn(1,2);
+  // fn(1);
+  // fn();
   // var startTime = Date.now();
   // tick.setCorrectInterval(function() {
   //   console.log((Date.now() - startTime) + 'ms elapsed');
