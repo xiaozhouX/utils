@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>promise test</title>
+	<script type="text/javascript" src="../src/promise.js"></script>
+</head>
+<body>
+	<script>
+
+// var test = new Promise(function(resolve, reject){
+// 	setTimeout(function(){
+// 		resolve(12);
+// 	}, 1000);
+// });
+// test.then(function(val){
+// 	return function(){
+// 		console.log(val+ 2)
+// 	}
+// }, function(){}).then(function(val){
+// 	console.log(val)
+// });
+// test.then(function(val){
+// 	setTimeout(function(){
+// 		alert(val + 2);
+// 	}, 1000)
+// }, function(){})
+// var num = 100;
+// var test = new Promise(function(resolve, reject){
+// 	if(num > 100 ){
+// 		resolve(num + 1);
+// 	}else {
+// 		reject(num - 1);
+// 	}
+// }).then(function(val){
+// 	console.log();
+// 	return val + 1;
+// }).then(function(){
+// 	console.log('success')
+// })['catch'](function(){
+// 	console.log('final errror')
+// })
+
+var promise1 = new Promise(function(resolve, reject){
+	setTimeout(function(){
+		resolve('123')
+	}, 3000);
+});
+var promise2 = new Promise(function(resolve, reject){
+	setTimeout(function(){
+		resolve('456')
+	}, 2000);
+});
+var promise3 = new Promise(function(resolve, reject){
+	setTimeout(function(){
+		resolve('789')
+	}, 1000);
+});
+var promise4 = new Promise(function(resolve, reject){
+	setTimeout(function(){
+		resolve('101112')
+	}, 5000);
+});
+
+var promiseArray = [promise1,promise2,promise3,promise4];
+
+var test = Promise.all(promiseArray).then(function(val){
+	console.log(val)
+});
+
+
+var test2 = promiseArray.reduce(function(seq, res){
+	return seq.then(function(){
+		return res;
+	}).then(function(val){
+		console.log(val);
+	})
+}, Promise.resolve());
+
+
+	</script>
+</body>
+</html>
