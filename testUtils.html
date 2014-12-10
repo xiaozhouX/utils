@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>test utils</title>
+  <script src="lib/core-amd.js"></script>
+</head>
+<body>
+  <script>
+    defineConfig({
+      root: 'src/'
+    });
+    define('main', ['util'], function (_) {
+      map = _.map([1,2,3,5], function(value) {
+       return value + '2';
+    });
+      console.log(map);
+    }).run();
+  </script>
+</body>
+</html>

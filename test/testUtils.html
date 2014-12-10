@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>test utils</title>
+  <script src="../lib/core-amd.js"></script>
+</head>
+<body>
+  <script>
+    defineConfig({
+      root: '../src/',
+      testScript: 'test.js'
+    });
+    define('main', ['index'], function (_) {
+      console.log(_)
+    })
+  </script>
+</body>
+</html>
