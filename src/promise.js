@@ -182,3 +182,29 @@ Promise.race = function(args) {
 Promise.prototype['catch'] = function(onRejected) {
 	return this.then(null, onRejected);
 }
+
+var deferred = function() {
+	var resolveFn, rejectFn;
+	var newPromise = new Promise(function(resolve, reject) {
+		resolveFn = function(value) {
+			resolve(value);
+		};
+		rejectFn = function(err) {
+			reject(err);
+		}
+	});
+	return {
+		promise: newPromise,
+		resolve: resolveFn,
+		reject: rejectFn
+	}
+};
+
+module.exports = {
+	resolved: Promise.resolved,
+	rejected: Promise.rejected,
+	deferred: deferred
+};
+
+
+
